@@ -14,34 +14,38 @@ class IsOwner(BasePermission):
 
 
 class IsEmployee(BasePermission):
-    """
-    Permission class to check if the user is an employee.
-    """
-
     def has_permission(self, request, view):
-        if not request.user.is_authenticated:
-            return False
 
-        return request.user.role == "employee"
+        return request.user.is_authenticated and request.user.role == 'employee'
+    
+    def has_object_permission(self, request, view, obj):
+        return obj == request.user
 
 
 class IsCustomer(BasePermission):
-    """
-    Permission class to check if the user is a customer.
-    """
-
     def has_permission(self, request, view):
+        return request.user.is_authenticated and request.user.role == 'customer'
 
-        if not request.user.is_authenticated:
-            return False
-
-        return request.user.role == "customer"
+    def has_object_permission(self, request, view, obj):
+        return request.user == obj
 
 
 class IsOwnerOrReadOnly(BasePermission):
     def has_object_permission(self, request, view, obj):
         if request.method in ["GET"]:
-            return obj.owner == request.user or request.user.role == "admin"
+            user = request.user
+            
+            if user.role == "owner":
+                return True
+            
+            if user.role == "customer" and obj == user:
+                return True
+            
+            if user.role == "employee" and obj.role == "customer":
+                return obj.restaurant == user.restaurant
+            
+            return False
+
         return obj.owner == request.user
 
 
@@ -64,17 +68,18 @@ class IsOwnerOfUser(BasePermission):
         return True
 
 
-class IsOwnerCreatingUser(BasePermission):
+class IsOwnerCreatingEmployee(BasePermission):
+    """
+    Allows creation of employee users only if the request user is an owner.
+    """
     def has_permission(self, request, view):
         if request.method == "POST":
-            return request.user.role == "owner"
+            return request.user.is_authenticated and request.user.role == "owner" and request.data.get('role') == 'employee'
         return True
 
 
-class IsOwnerOfUserToDelete(BasePermission):
+class IsOwnerDeleting(BasePermission):
     def has_object_permission(self, request, view, obj):
-        if obj.role == "owner":
-            return False
         if request.user.role == "owner" and obj.owner == request.user:
             return True
         return False
