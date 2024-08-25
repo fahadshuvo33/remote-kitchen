@@ -23,7 +23,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = "django-insecure-zog5pdsk=^h^$29nl^#7-*$@w2nh2^p@tm8o+(+2i4e8)roqlm"
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ["*"]
 
@@ -133,11 +133,11 @@ STATIC_URL = "static/"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework.authentication.BasicAuthentication',
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework.authentication.BasicAuthentication",
     ],
-    'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticated',
+    "DEFAULT_PERMISSION_CLASSES": [
+        "rest_framework.permissions.IsAuthenticated",
     ],
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
@@ -150,6 +150,6 @@ SPECTACULAR_SETTINGS = {
 }
 
 # Stripe config
-STRIPE_PUBLIC_KEY = 'stripe-public-key'
-STRIPE_SECRET_KEY = 'stripe-secret-key'
-STRIPE_WEBHOOK_SECRET = 'stripe_webhook_secret'
+STRIPE_PUBLIC_KEY = "stripe-public-key"
+STRIPE_SECRET_KEY = "stripe-secret-key"
+STRIPE_WEBHOOK_SECRET = "stripe_webhook_secret"

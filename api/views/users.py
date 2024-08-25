@@ -20,7 +20,9 @@ class CustomerView(viewsets.ModelViewSet):
     def get_permissions(self):
         if self.request.method == "GET":
             self.permission_classes = [IsCustomer | IsOwner | IsEmployee]
-        elif self.request.method in ["POST", "PUT", "PATCH"]:
+        elif self.request.method == "POST":
+            self.permission_classes = []
+        elif self.request.method in ["PUT", "PATCH"]:
             self.permission_classes = [IsOwner | IsCustomer]
         elif self.request.method == "DELETE":
             self.permission_classes = [IsOwner]
@@ -54,19 +56,40 @@ class CustomerView(viewsets.ModelViewSet):
             return User.objects.none()
 
     def perform_create(self, serializer):
-        # Allow customers to create their own profile
         if self.request.user.role == "customer":
             if self.request.user == serializer.instance:
                 raise PermissionDenied(
                     "Customers cannot create a new profile for themselves. Update their existing profile instead."
                 )
-            serializer.save()
+        elif self.request.user.role == "employee":
+            if self.request.user.restaurant != serializer.instance.restaurant:
+                raise PermissionDenied(
+                    "Employees can only create profiles for their own restaurants."
+                )
+        elif self.request.user.role == "owner":
+            if self.request.user != serializer.instance.restaurant.owner:
+                raise PermissionDenied(
+                    "Owners can only create profiles for their associated restaurants."
+                )
+        elif serializer.validated_data.get("role") != "customer":
+            raise PermissionDenied("Only customers can be created through this API")
         else:
             serializer.save()
 
     def perform_update(self, serializer):
-        # Allow customers to update only their own profile
-        if (
+        if serializer.validated_data.get("role") != "customer":
+            raise PermissionDenied("You can not update your role through this API")
+        elif self.request.user.role == "employee":
+            if self.request.user.restaurant != serializer.instance.restaurant:
+                raise PermissionDenied(
+                    "Employees can only update profiles for their own restaurants."
+                )
+        elif self.request.user.role == "owner":
+            if self.request.user != serializer.instance.restaurant.owner:
+                raise PermissionDenied(
+                    "Owners can only update profiles for their associated restaurants."
+                )
+        elif (
             self.request.user.role == "customer"
             and self.request.user != serializer.instance
         ):
@@ -74,9 +97,12 @@ class CustomerView(viewsets.ModelViewSet):
         serializer.save()
 
     def perform_destroy(self, instance):
-        # Prevent customers from deleting their own profiles
-        if self.request.user == instance:
-            raise PermissionDenied("Customers cannot delete their own profile.")
+        if self.request.user.role == "owner":
+            if self.request.user != instance.restaurant.owner:
+                raise PermissionDenied(
+                    "Owners can only delete profiles for their associated restaurants."
+                )
+
         super().perform_destroy(instance)
 
 
@@ -87,9 +113,9 @@ class EmployeeView(viewsets.ModelViewSet):
     serializer_class = EmployeeSerializer
 
     def get_permissions(self):
-        if self.request.method in ["GET", "POST", "PUT"]:
+        if self.request.method in ["GET", "PUT", "PATCH"]:
             self.permission_classes = [IsEmployee | IsOwner]
-        elif self.request.method == "DELETE":
+        elif self.request.method in ["POST", "DELETE"]:
             self.permission_classes = [IsOwner]
         else:
             self.permission_classes = []
@@ -104,28 +130,39 @@ class EmployeeView(viewsets.ModelViewSet):
             restaurants_ids = Restaurant.objects.filter(owner=user).values_list(
                 "id", flat=True
             )
-            return User.objects.filter(restaurant__id__in=restaurant_ids)
+            return User.objects.filter(restaurant__id__in=restaurants_ids)
         else:
             return User.objects.none()
 
     def perform_create(self, serializer):
 
-        if self.request.user.role == "employee":
-            raise PermissionDenied("Employees are not allowed to create new users.")
+        if self.request.user.role == "owner":
+            if self.request.user != serializer.instance.restaurant.owner:
+                raise PermissionDenied(
+                    "Owners can only create profiles for their associated restaurants."
+                )
+
         serializer.save()
 
     def perform_update(self, serializer):
-
         if (
             self.request.user.role == "employee"
             and self.request.user != serializer.instance
         ):
             raise PermissionDenied("Employees can only update their own profile.")
+        elif self.request.user.role == "owner":
+            if self.request.user != serializer.instance.restaurant.owner:
+                raise PermissionDenied(
+                    "Owners can only update profiles for their associated restaurants."
+                )
         serializer.save()
 
     def perform_destroy(self, instance):
-        if self.request.user == instance:
-            raise PermissionDenied("Employees cannot delete their own profile.")
+        if self.request.user.role == "owner":
+            if self.request.user != instance.restaurant.owner:
+                raise PermissionDenied(
+                    "Owners can only delete profiles for their associated restaurants."
+                )
         super().perform_destroy(instance)
 
 
@@ -136,7 +173,7 @@ class OwnerView(viewsets.ModelViewSet):
     serializer_class = OwnerSerializer
 
     def get_permissions(self):
-        if self.request.method in ["GET", "PUT"]:
+        if self.request.method in ["GET", "PUT", "PATCH"]:
             self.permission_classes = [IsSuperAdmin | IsOwner]
         elif self.request.method in ["POST", "DELETE"]:
             self.permission_classes = [IsSuperAdmin]
@@ -145,9 +182,10 @@ class OwnerView(viewsets.ModelViewSet):
         return [permission() for permission in self.permission_classes]
 
     def get_queryset(self):
+        queryset = User.objects.all()
         user = self.request.user
-        if user.isAdmin:
-            return User.objects.all()
+        if user.is_superuser:
+            return queryset.filter(role="owner")
         elif user.role == "owner":
             return User.objects.filter(id=user.id)
         else:
@@ -169,6 +207,6 @@ class OwnerView(viewsets.ModelViewSet):
         return super().perform_update(serializer)
 
     def perform_destroy(self, instance):
-        if self.request.user == instance:
-            raise PermissionDenied("Owners cannot delete their own profile.")
+        if self.request.user.role == "owner":
+            raise PermissionDenied("Owners are not allowed to delete users.")
         super().perform_destroy(instance)
