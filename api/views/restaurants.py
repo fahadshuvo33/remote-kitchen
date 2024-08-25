@@ -6,6 +6,7 @@ from accounts.models import User
 from api.serializers.restaurants import RestaurantSerializer
 from accounts.permissions import IsOwner, IsEmployee
 
+
 class RestaurantViewSet(viewsets.ModelViewSet):
     serializer_class = RestaurantSerializer
 
@@ -26,20 +27,26 @@ class RestaurantViewSet(viewsets.ModelViewSet):
             return Restaurant.objects.none()
 
     def perform_create(self, serializer):
-        if self.request.user.role == 'owner':
-            serializer.save(owner=self.request.user)
-        else:
-            raise PermissionDenied("Only owners can create restaurants.")
+        if self.request.user != serializer.instance.owner:
+            raise PermissionDenied(
+                "You do not have permission to create a restaurant for another user."
+            )
+        serializer.save()
+        return super().perform_create(serializer)
 
     def perform_update(self, serializer):
         restaurant = self.get_object()
         if self.request.user == restaurant.owner:
             serializer.save()
         else:
-            raise PermissionDenied("You do not have permission to update this restaurant.")
+            raise PermissionDenied(
+                "You do not have permission to update this restaurant."
+            )
 
     def perform_destroy(self, instance):
         if self.request.user == instance.owner:
             instance.delete()
         else:
-            raise PermissionDenied("You do not have permission to delete this restaurant.")
+            raise PermissionDenied(
+                "You do not have permission to delete this restaurant."
+            )

@@ -15,7 +15,11 @@ class User(AbstractUser):
     phone_number = PhoneNumberField(blank=True, null=True)
     address = models.TextField(blank=True, null=True)
     restaurant = models.ForeignKey(
-        "restaurants.Restaurant", on_delete=models.CASCADE, blank=True, null=True
+        "restaurants.Restaurant",
+        on_delete=models.CASCADE,
+        blank=True,
+        null=True,
+        related_name="users",
     )
 
     class Meta:
@@ -29,18 +33,20 @@ class User(AbstractUser):
             self.restaurant = None
         elif self.role in ["employee", "customer"] and self.restaurant is None:
             raise ValidationError(
-                f"A restaurant must be assigned for the role {self.role}."
+                {"error": f"A restaurant must be assigned for the role {self.role}."}
             )
 
     def save(self, *args, **kwargs):
         self.clean()
         super().save(*args, **kwargs)
-        
+
     @property
     def get_restaurant(self):
         """
         Get the restaurant associated with the user based on their role.
         """
+        from restaurants.models import Restaurant
+
         if self.role in ["employee", "customer"]:
             return self.restaurant
         elif self.role == "owner":

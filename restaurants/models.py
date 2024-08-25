@@ -5,11 +5,7 @@ from django.conf import settings
 
 class Restaurant(models.Model):
     owner = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.SET_NULL,
-        related_name="restaurants",
-        blank=True,
-        null=True,
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="restaurants"
     )
     name = models.CharField(max_length=255)
     address = models.CharField(max_length=255)
