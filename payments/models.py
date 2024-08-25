@@ -1,17 +1,16 @@
+
 from django.db import models
-
-# import stripe
-
-# stripe.api_key = "YOUR_STRIPE_SECRET_KEY"
-PAYMENT_CHOICES = [
-    ("card", "Card"),
-    ("bank_transfer", "Bank Transfer"),
-]
+from django.conf import settings
 
 
 class Payment(models.Model):
-    # order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name="payments")
-    payment_method = models.CharField(max_length=20, choices=PAYMENT_CHOICES)
-    payment_date = models.DateTimeField(auto_now_add=True)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    order = models.ForeignKey("orders.Order", on_delete=models.CASCADE)  # ForeignKey to Order
     amount = models.DecimalField(max_digits=10, decimal_places=2)
-    stripe_payment_id = models.CharField(max_length=255)
+    stripe_payment_intent_id = models.CharField(max_length=255, unique=True)  # Ensuring uniqueness
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Payment {self.id} for Order {self.order.id} by {self.user}"
+
+

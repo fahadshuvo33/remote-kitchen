@@ -141,9 +141,15 @@ REST_FRAMEWORK = {
     ],
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
+
 SPECTACULAR_SETTINGS = {
     "TITLE": "Remote Kitchen",
     "DESCRIPTION": "Remote kitchen project api",
     "VERSION": "1.0.0",
     "SERVE_INCLUDE_SCHEMA": False,
 }
+
+# Stripe config
+STRIPE_PUBLIC_KEY = 'stripe-public-key'
+STRIPE_SECRET_KEY = 'stripe-secret-key'
+STRIPE_WEBHOOK_SECRET = 'stripe_webhook_secret'
