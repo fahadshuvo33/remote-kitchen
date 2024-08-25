@@ -4,6 +4,9 @@ from orders.models import Order, OrderItem
 from api.serializers.orders import OrderSerializer, OrderItemSerializer
 from accounts.permissions import IsCustomer, IsEmployee, IsOwner
 
+from rest_framework.exceptions import PermissionDenied
+
+
 class OrderViewSet(viewsets.ModelViewSet):
     serializer_class = OrderSerializer
 
@@ -11,7 +14,9 @@ class OrderViewSet(viewsets.ModelViewSet):
         if self.request.method in ["GET"]:
             self.permission_classes = [IsAuthenticated]
         elif self.request.method in ["POST"]:
-            self.permission_classes = [IsCustomer | IsOwner]  # Customers can create orders, but typically POST is restricted.
+            self.permission_classes = [
+                IsCustomer | IsOwner
+            ]  # Customers can create orders, but typically POST is restricted.
         elif self.request.method in ["PUT", "PATCH", "DELETE"]:
             self.permission_classes = [IsOwner | IsEmployee]
         return [permission() for permission in self.permission_classes]
@@ -31,24 +36,25 @@ class OrderViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         # Customers can create orders but only if they are authenticated
-        if self.request.user.role == 'customer':
+        if self.request.user.role == "customer":
             serializer.save(customer=self.request.user)
         else:
             raise PermissionDenied("Only customers can create orders.")
 
     def perform_update(self, serializer):
         # Ensure only employees or owners can update orders
-        if self.request.user.role in ['employee', 'owner']:
+        if self.request.user.role in ["employee", "owner"]:
             serializer.save()
         else:
             raise PermissionDenied("Only employees and owners can update orders.")
 
     def perform_destroy(self, instance):
         # Ensure only employees or owners can delete orders
-        if self.request.user.role in ['employee', 'owner']:
+        if self.request.user.role in ["employee", "owner"]:
             super().perform_destroy(instance)
         else:
             raise PermissionDenied("Only employees and owners can delete orders.")
+
 
 class OrderItemViewSet(viewsets.ModelViewSet):
     serializer_class = OrderItemSerializer
