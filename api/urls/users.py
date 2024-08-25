@@ -1,8 +1,13 @@
-from django.urls import path
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
+from api.views.users import CustomerView, EmployeeView, OwnerView
 
-from api.views.users import UserView
+# Create a router and register our viewsets with it.
+router = DefaultRouter()
+router.register(r"customers", CustomerView, basename="customer")
+router.register(r"employees", EmployeeView, basename="employee")
+router.register(r"owners", OwnerView, basename="owner")
 
 urlpatterns = [
-    path("users/", UserView.as_view()),
-    # path("users/<int:pk>/", UserDetailView.as_view()),
+    path("", include(router.urls)),
 ]

@@ -35,3 +35,15 @@ class User(AbstractUser):
     def save(self, *args, **kwargs):
         self.clean()
         super().save(*args, **kwargs)
+        
+    @property
+    def get_restaurant(self):
+        """
+        Get the restaurant associated with the user based on their role.
+        """
+        if self.role in ["employee", "customer"]:
+            return self.restaurant
+        elif self.role == "owner":
+            # Assuming the owner can have multiple restaurants, return a list or a specific restaurant
+            return Restaurant.objects.filter(user=self).first()
+        return None

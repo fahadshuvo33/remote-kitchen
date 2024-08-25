@@ -2,11 +2,17 @@ from rest_framework.permissions import BasePermission
 
 
 class IsOwner(BasePermission):
-    """
-    Permission class to check if the user is the owner.
-    """
-
     def has_permission(self, request, view):
+        """
+        Check if the user is an owner.
+
+        Args:
+            request (Request): The incoming request.
+            view (View): The view being accessed.
+
+        Returns:
+            bool: If the user is an owner.
+        """
         if not request.user.is_authenticated:
             return False
 
@@ -14,67 +20,73 @@ class IsOwner(BasePermission):
 
 
 class IsEmployee(BasePermission):
-    """
-    Permission class to check if the user is an employee.
-    """
-
     def has_permission(self, request, view):
-        if not request.user.is_authenticated:
-            return False
+        """
+        Check if the user is an employee.
 
-        return request.user.role == "employee"
+        Args:
+            request (Request): The incoming request.
+            view (View): The view being accessed.
+
+        Returns:
+            bool: If the user is an employee.
+        """
+        return request.user.is_authenticated and request.user.role == "employee"
+
+    def has_object_permission(self, request, view, obj):
+        """
+        Check if the user is the same as the object.
+
+        Args:
+            request (Request): The incoming request.
+            view (View): The view being accessed.
+            obj (User): The object being accessed.
+
+        Returns:
+            bool: If the user is the same as the object.
+        """
+        return obj == request.user
 
 
 class IsCustomer(BasePermission):
-    """
-    Permission class to check if the user is a customer.
-    """
-
     def has_permission(self, request, view):
+        """
+        Check if the user is a customer.
 
-        if not request.user.is_authenticated:
-            return False
+        Args:
+            request (Request): The incoming request.
+            view (View): The view being accessed.
 
-        return request.user.role == "customer"
+        Returns:
+            bool: If the user is a customer.
+        """
+        return request.user.is_authenticated and request.user.role == "customer"
 
-
-class IsOwnerOrReadOnly(BasePermission):
     def has_object_permission(self, request, view, obj):
-        if request.method in ["GET"]:
-            return obj.owner == request.user or request.user.role == "admin"
-        return obj.owner == request.user
+        """
+        Check if the user is the same as the object.
+
+        Args:
+            request (Request): The incoming request.
+            view (View): The view being accessed.
+            obj (User): The object being accessed.
+
+        Returns:
+            bool: If the user is the same as the object.
+        """
+        return request.user == obj
 
 
-class IsNotOwner(BasePermission):
-    def has_object_permission(self, request, view, obj):
-        return obj.role != "owner"
-
-
-class IsEmployeeOfRestaurant(BasePermission):
-    def has_object_permission(self, request, view, obj):
-        if request.user.role == "employee":
-            return obj.restaurant == request.user.restaurant
-        return True
-
-
-class IsOwnerOfUser(BasePermission):
-    def has_object_permission(self, request, view, obj):
-        if obj.role == "employee":
-            return obj.owner == request.user
-        return True
-
-
-class IsOwnerCreatingUser(BasePermission):
+class IsSuperAdmin(BasePermission):
     def has_permission(self, request, view):
-        if request.method == "POST":
-            return request.user.role == "owner"
-        return True
+        """
+        Check if the user is a super admin.
 
+        Args:
+            request (Request): The incoming request.
+            view (View): The view being accessed.
 
-class IsOwnerOfUserToDelete(BasePermission):
-    def has_object_permission(self, request, view, obj):
-        if obj.role == "owner":
-            return False
-        if request.user.role == "owner" and obj.owner == request.user:
-            return True
-        return False
+        Returns:
+            bool: If the user is a super admin.
+        """
+        return request.user.is_authenticated and request.user.is_superuser
