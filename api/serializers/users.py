@@ -22,6 +22,12 @@ class CustomerSerializer(serializers.ModelSerializer):
         }
 
     def validate_restaurant(self, value):
+        """
+        Validate the restaurant associated with the user based on their role.
+
+        If the user's role is customer, a restaurant must be assigned.
+        Otherwise, the restaurant can be None.
+        """
         if self.initial_data.get("role") == "customer" and value is None:
             raise serializers.ValidationError(
                 f"A restaurant must be assigned for the role : {self.initial_data.get('role')}."
@@ -49,6 +55,12 @@ class EmployeeSerializer(serializers.ModelSerializer):
         }
 
     def validate_restaurant(self, value):
+        """
+        Validate the restaurant associated with the user based on their role.
+
+        If the user's role is employee, a restaurant must be assigned.
+        Otherwise, the restaurant can be None.
+        """
         if self.initial_data.get("role") == "employee" and value is None:
             raise serializers.ValidationError(
                 f"A restaurant must be assigned for the role : {self.initial_data.get('role')}."
@@ -76,6 +88,12 @@ class OwnerSerializer(serializers.ModelSerializer):
         }
 
     def validate_restaurant(self, value):
+        """
+        Validate the restaurant associated with the user based on their role.
+
+        If the user's role is owner, a restaurant cannot be assigned.
+        Otherwise, the restaurant can be None.
+        """
         if self.initial_data.get("role") == "owner" and value is not None:
             raise serializers.ValidationError(
                 f"Cannot assign a restaurant for the role : {self.initial_data.get('role')}."

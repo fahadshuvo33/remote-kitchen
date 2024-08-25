@@ -14,9 +14,7 @@ class OrderItemSerializer(serializers.ModelSerializer):
 
 
 class OrderSerializer(serializers.ModelSerializer):
-    items = OrderItemSerializer(
-        many=True, read_only=True
-    )  # Include order items in the order response
+    items = OrderItemSerializer(many=True, read_only=True)
     customer = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
     restaurant = serializers.PrimaryKeyRelatedField(queryset=Restaurant.objects.all())
 

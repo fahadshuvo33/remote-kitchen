@@ -6,72 +6,245 @@ from accounts.permissions import IsCustomer, IsEmployee, IsOwner
 
 from rest_framework.exceptions import PermissionDenied
 
+from django.shortcuts import get_object_or_404
+from drf_spectacular.utils import extend_schema, extend_schema_view
 
-class OrderViewSet(viewsets.ModelViewSet):
+
+class MyOrderViewSet(viewsets.ModelViewSet):
     serializer_class = OrderSerializer
-
-    def get_permissions(self):
-        if self.request.method in ["GET"]:
-            self.permission_classes = [IsAuthenticated]
-        elif self.request.method in ["POST"]:
-            self.permission_classes = [
-                IsCustomer | IsOwner
-            ]  # Customers can create orders, but typically POST is restricted.
-        elif self.request.method in ["PUT", "PATCH", "DELETE"]:
-            self.permission_classes = [IsOwner | IsEmployee]
-        return [permission() for permission in self.permission_classes]
+    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
+        """
+        Return a queryset of the orders made by the user making the request.
+
+        :return: A queryset of Order objects
+        """
         user = self.request.user
-        if user.role == "customer":
-            # Customers can only see their own orders
-            return Order.objects.filter(customer=user)
-        elif user.role == "employee":
-            # Employees can see orders from their own restaurant
-            return Order.objects.filter(restaurant=user.restaurant)
-        elif user.role == "owner":
-            # Owners can see orders from their own restaurants
-            return Order.objects.filter(restaurant__owner=user)
-        return Order.objects.none()
+        return Order.objects.filter(customer=user)
 
     def perform_create(self, serializer):
-        # Customers can create orders but only if they are authenticated
-        if self.request.user.role == "customer":
-            serializer.save(customer=self.request.user)
-        else:
-            raise PermissionDenied("Only customers can create orders.")
+        """
+        Create a new Order object and save it to the database.
+
+        If the requesting user is not the same as the customer in the
+        validated data, a PermissionDenied exception will be raised.
+        """
+
+        if self.request.user != serializer.validated_data["customer"]:
+            raise PermissionDenied("You cannot create an order for another user.")
+        serializer.save(customer=self.request.user)
 
     def perform_update(self, serializer):
-        # Ensure only employees or owners can update orders
-        if self.request.user.role in ["employee", "owner"]:
-            serializer.save()
-        else:
-            raise PermissionDenied("Only employees and owners can update orders.")
+        """
+        Update an Order object and save it to the database.
+
+        If the requesting user is not the same as the customer in the
+        validated data, a PermissionDenied exception will be raised.
+        """
+        if self.request.user != serializer.instance.customer:
+            raise PermissionDenied("You cannot update an order for another user.")
+        super().perform_update(serializer)
 
     def perform_destroy(self, instance):
-        # Ensure only employees or owners can delete orders
-        if self.request.user.role in ["employee", "owner"]:
-            super().perform_destroy(instance)
-        else:
-            raise PermissionDenied("Only employees and owners can delete orders.")
+        """
+        Delete an Order object from the database.
+
+        If the requesting user is not the same as the customer in the
+        instance, a PermissionDenied exception will be raised.
+        """
+        if self.request.user != instance.customer:
+            raise PermissionDenied("You cannot delete an order for another user.")
+        super().perform_destroy(instance)
 
 
-class OrderItemViewSet(viewsets.ModelViewSet):
-    serializer_class = OrderItemSerializer
-
-    def get_permissions(self):
-        return [IsAuthenticated()]
+class AllOrderViewSet(viewsets.ModelViewSet):
+    serializer_class = OrderSerializer
+    permission_classes = [IsEmployee | IsOwner]
+    http_method_names = ["get", "put", "patch", "delete"]
 
     def get_queryset(self):
+        """
+        Return a queryset of Order objects that the requesting user is allowed to see.
+
+        If the requesting user is an employee, return a queryset of
+        Orders associated with the restaurant the user belongs to.
+
+        If the requesting user is an owner, return a queryset of
+        Orders associated with restaurants owned by the requesting user.
+
+        Otherwise, return an empty queryset.
+        """
+        if self.request.user.role == "employee":
+            return Order.objects.filter(restaurant=self.request.user.restaurant)
+        elif self.request.user.role == "owner":
+            return Order.objects.filter(restaurant__owner=self.request.user)
+        return Order.objects.none()
+
+    def perform_update(self, serializer):
+        """
+        Update an Order object and save it to the database.
+
+        If the requesting user is an employee, the restaurant associated with
+        the order must be the same as the restaurant the user belongs to.
+
+        If the requesting user is an owner, the restaurant associated with the
+        order must be one of the restaurants owned by the requesting user.
+
+        Otherwise, a PermissionDenied exception will be raised.
+        """
+        if self.request.user.role == "employee":
+            if self.request.user.restaurant != serializer.instance.restaurant:
+                raise PermissionDenied(
+                    "You cannot update an order for another restaurant."
+                )
+        elif self.request.user.role == "owner":
+            if self.request.user != serializer.instance.restaurant.owner:
+                raise PermissionDenied(
+                    "You cannot update an order for another restaurant."
+                )
+        super().perform_update(serializer)
+
+    def perform_destroy(self, instance):
+        """
+        Delete an Order object from the database.
+
+        If the requesting user is an employee, a PermissionDenied exception will
+        be raised.
+
+        If the requesting user is an owner, the restaurant associated with the
+        order must be one of the restaurants owned by the requesting user.
+
+        Otherwise, a PermissionDenied exception will be raised.
+        """
+        if self.request.user.role == "employee":
+            raise PermissionDenied("Employees cannot delete orders.")
+        elif self.request.user.role == "owner":
+            if self.request.user != instance.restaurant.owner:
+                raise PermissionDenied(
+                    "You cannot delete an order for another restaurant."
+                )
+        super().perform_destroy(instance)
+
+
+class MyOrderItemViewSet(viewsets.ModelViewSet):
+    serializer_class = OrderSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        """
+        Return a queryset of all OrderItem objects associated with
+        the orders of the requesting user.
+
+        :return: A queryset of OrderItem objects
+        """
         user = self.request.user
-        # Filter order items based on the orders the user can see
-        if user.role == "customer":
-            # Customers can see order items only from their own orders
-            return OrderItem.objects.filter(order__customer=user)
-        elif user.role == "employee":
-            # Employees can see order items from orders in their own restaurant
-            return OrderItem.objects.filter(order__restaurant=user.restaurant)
-        elif user.role == "owner":
-            # Owners can see order items from orders in their own restaurants
-            return OrderItem.objects.filter(order__restaurant__owner=user)
+        return OrderItem.objects.filter(order__customer=user)
+
+    def perform_create(self, serializer):
+        """
+        Create a new OrderItem object and save it to the database.
+
+        If the requesting user is not the customer associated with the
+        order, a PermissionDenied exception will be raised.
+
+        :param serializer: An OrderItemSerializer object
+        """
+        if self.request.user != serializer.validated_data["order"].customer:
+            raise PermissionDenied("You cannot create an order item for another user.")
+        serializer.save(order__customer=self.request.user)
+
+    def perform_update(self, serializer):
+        """
+        Update an existing OrderItem object and save it to the database.
+
+        If the requesting user is not the customer associated with the
+        order, a PermissionDenied exception will be raised.
+
+        :param serializer: An OrderItemSerializer object
+        """
+        if self.request.user != serializer.instance.order.customer:
+            raise PermissionDenied("You cannot update an order item for another user.")
+        super().perform_update(serializer)
+
+    def perform_destroy(self, instance):
+        """
+        Delete an existing OrderItem object from the database.
+
+        If the requesting user is not the customer associated with the
+        order, a PermissionDenied exception will be raised.
+
+        :param instance: An OrderItem object
+        """
+        if self.request.user != instance.order.customer:
+            raise PermissionDenied("You cannot delete an order item for another user.")
+        super().perform_destroy(instance)
+
+
+class AllOrderItemViewSet(viewsets.ModelViewSet):
+    serializer_class = OrderItemSerializer
+    permission_classes = [IsEmployee | IsOwner]
+    http_method_names = ["get", "put", "patch", "delete"]
+
+    def get_queryset(self):
+        """
+        Return a queryset of OrderItem objects that the requesting user is allowed to see.
+
+        If the requesting user is an employee, return a queryset of OrderItems
+        associated with the restaurant the user belongs to.
+
+        If the requesting user is an owner, return a queryset of OrderItems associated
+        with restaurants owned by the requesting user.
+
+        Otherwise, return an empty queryset.
+        """
+        if self.request.user.role == "employee":
+            return OrderItem.objects.filter(
+                order__restaurant=self.request.user.restaurant
+            )
+        elif self.request.user.role == "owner":
+            return OrderItem.objects.filter(order__restaurant__owner=self.request.user)
         return OrderItem.objects.none()
+
+    def perform_update(self, serializer):
+        """
+        Update an existing OrderItem object and save it to the database.
+
+        If the requesting user is an employee, the restaurant associated with
+        the order must be the same as the restaurant the user belongs to.
+
+        If the requesting user is an owner, the restaurant associated with the
+        order must be one of the restaurants owned by the requesting user.
+
+        Otherwise, a PermissionDenied exception will be raised.
+        """
+        if self.request.user.role == "employee":
+            if self.request.user.restaurant != serializer.instance.order.restaurant:
+                raise PermissionDenied(
+                    "You cannot update an order item for another restaurant."
+                )
+        elif self.request.user.role == "owner":
+            if self.request.user != serializer.instance.order.restaurant.owner:
+                raise PermissionDenied(
+                    "You cannot update an order item for another restaurant."
+                )
+        super().perform_update(serializer)
+
+    def perform_destroy(self, instance):
+        """
+        Delete an existing OrderItem object from the database.
+
+        If the requesting user is an employee, raise a PermissionDenied exception.
+        If the requesting user is an owner, the restaurant associated with
+        the order must be one of the restaurants owned by the requesting user.
+
+        Otherwise, a PermissionDenied exception will be raised.
+        """
+        if self.request.user.role == "employee":
+            raise PermissionDenied("Employees cannot delete order items.")
+        elif self.request.user.role == "owner":
+            if self.request.user != instance.order.restaurant.owner:
+                raise PermissionDenied(
+                    "You cannot delete an order item for another restaurant."
+                )
+        super().perform_destroy(instance)

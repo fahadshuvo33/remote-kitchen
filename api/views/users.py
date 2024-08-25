@@ -18,6 +18,14 @@ class CustomerView(viewsets.ModelViewSet):
     serializer_class = CustomerSerializer
 
     def get_permissions(self):
+        """
+        Determine the permissions required for the incoming request.
+
+        If the request is a GET, customers, owners, and employees can view.
+        If the request is a POST, anyone can create.
+        If the request is a PUT or PATCH, owners and customers can update.
+        If the request is a DELETE, only owners can delete.
+        """
         if self.request.method == "GET":
             self.permission_classes = [IsCustomer | IsOwner | IsEmployee]
         elif self.request.method == "POST":
@@ -33,7 +41,12 @@ class CustomerView(viewsets.ModelViewSet):
 
     def get_queryset(self):
         """
-        Restrict the returned users based on the requesting user's role and associated restaurant.
+        Determine the queryset for the incoming request.
+
+        If the requesting user is a customer, return only the requesting user.
+        If the requesting user is an employee, return all customers in the same restaurant.
+        If the requesting user is an owner, return all customers in the associated restaurants.
+        Otherwise, return an empty queryset.
         """
         user = self.request.user
 
@@ -56,6 +69,14 @@ class CustomerView(viewsets.ModelViewSet):
             return User.objects.none()
 
     def perform_create(self, serializer):
+        """
+        Create a new User object and save it to the database.
+
+        If the requesting user is a customer, they cannot create a new profile for themselves.
+        If the requesting user is an employee, they can only create profiles for their own restaurant.
+        If the requesting user is an owner, they can only create profiles for their associated restaurants.
+        If the role of the created user is not customer, a PermissionDenied exception will be raised.
+        """
         if self.request.user.role == "customer":
             if self.request.user == serializer.instance:
                 raise PermissionDenied(
@@ -77,6 +98,14 @@ class CustomerView(viewsets.ModelViewSet):
             serializer.save()
 
     def perform_update(self, serializer):
+        """
+        Update a User object and save it to the database.
+
+        If the requesting user is an employee, they can only update profiles for their own restaurant.
+        If the requesting user is an owner, they can only update profiles for their associated restaurants.
+        If the requesting user is a customer, they can only update their own profile.
+        If the role of the updated user is not customer, a PermissionDenied exception will be raised.
+        """
         if serializer.validated_data.get("role") != "customer":
             raise PermissionDenied("You can not update your role through this API")
         elif self.request.user.role == "employee":
@@ -97,6 +126,14 @@ class CustomerView(viewsets.ModelViewSet):
         serializer.save()
 
     def perform_destroy(self, instance):
+        """
+        Delete a User object from the database.
+
+        If the requesting user is an owner, the restaurant associated with
+        the user must be one of the restaurants owned by the requesting user.
+
+        Otherwise, a PermissionDenied exception will be raised.
+        """
         if self.request.user.role == "owner":
             if self.request.user != instance.restaurant.owner:
                 raise PermissionDenied(
@@ -107,12 +144,16 @@ class CustomerView(viewsets.ModelViewSet):
 
 
 class EmployeeView(viewsets.ModelViewSet):
-    """
-    API endpoint that allows employees to be viewed or edited."""
-
     serializer_class = EmployeeSerializer
 
     def get_permissions(self):
+        """
+        Determine the permissions required for the current request.
+
+        If the request is a GET, PUT, or PATCH, employees and owners can access.
+        If the request is a POST or DELETE, only owners can access.
+        Otherwise, no permissions are required.
+        """
         if self.request.method in ["GET", "PUT", "PATCH"]:
             self.permission_classes = [IsEmployee | IsOwner]
         elif self.request.method in ["POST", "DELETE"]:
@@ -122,6 +163,13 @@ class EmployeeView(viewsets.ModelViewSet):
         return [permission() for permission in self.permission_classes]
 
     def get_queryset(self):
+        """
+        Determine the queryset for the incoming request.
+
+        If the requesting user is an employee, return only the requesting user.
+        If the requesting user is an owner, return all employees in the associated restaurants.
+        Otherwise, return an empty queryset.
+        """
         queryset = User.objects.all()
         user = self.request.user
         if user.role == "employee":
@@ -135,7 +183,14 @@ class EmployeeView(viewsets.ModelViewSet):
             return User.objects.none()
 
     def perform_create(self, serializer):
+        """
+        Create a new Employee object and save it to the database.
 
+        If the requesting user is an owner, the restaurant associated with
+        the employee must be one of the restaurants owned by the requesting user.
+
+        Otherwise, a PermissionDenied exception will be raised.
+        """
         if self.request.user.role == "owner":
             if self.request.user != serializer.instance.restaurant.owner:
                 raise PermissionDenied(
@@ -145,6 +200,13 @@ class EmployeeView(viewsets.ModelViewSet):
         serializer.save()
 
     def perform_update(self, serializer):
+        """
+        Update a User object and save it to the database.
+
+        If the requesting user is an employee, they can only update their own profile.
+        If the requesting user is an owner, they can only update profiles for their associated restaurants.
+        Otherwise, a PermissionDenied exception will be raised.
+        """
         if (
             self.request.user.role == "employee"
             and self.request.user != serializer.instance
@@ -158,6 +220,14 @@ class EmployeeView(viewsets.ModelViewSet):
         serializer.save()
 
     def perform_destroy(self, instance):
+        """
+        Delete a User object from the database.
+
+        If the requesting user is an owner, the restaurant associated with
+        the user must be one of the restaurants owned by the requesting user.
+
+        Otherwise, a PermissionDenied exception will be raised.
+        """
         if self.request.user.role == "owner":
             if self.request.user != instance.restaurant.owner:
                 raise PermissionDenied(
@@ -173,6 +243,17 @@ class OwnerView(viewsets.ModelViewSet):
     serializer_class = OwnerSerializer
 
     def get_permissions(self):
+        """
+        Determine the permissions required for the incoming request.
+
+        If the request is a GET, PUT, or PATCH, super admins and owners can view, update, or partially update.
+        If the request is a POST, only super admins can create.
+        If the request is a DELETE, only super admins can delete.
+        Otherwise, no permissions are required.
+
+        Returns:
+            list: A list of permission objects
+        """
         if self.request.method in ["GET", "PUT", "PATCH"]:
             self.permission_classes = [IsSuperAdmin | IsOwner]
         elif self.request.method in ["POST", "DELETE"]:
@@ -182,6 +263,13 @@ class OwnerView(viewsets.ModelViewSet):
         return [permission() for permission in self.permission_classes]
 
     def get_queryset(self):
+        """
+        Determine the queryset for the incoming request.
+
+        If the requesting user is a super admin, return all owners.
+        If the requesting user is an owner, return only the requesting user.
+        Otherwise, return an empty queryset.
+        """
         queryset = User.objects.all()
         user = self.request.user
         if user.is_superuser:
@@ -192,12 +280,26 @@ class OwnerView(viewsets.ModelViewSet):
             return User.objects.none()
 
     def perform_create(self, serializer):
+        """
+        Create a new User object and save it to the database.
+
+        If the requesting user is an owner, a PermissionDenied exception will be raised.
+        Otherwise, a new User object will be created and saved to the database.
+        """
         if self.request.user.role == "owner":
             raise PermissionDenied("Owners are not allowed to create new users.")
         serializer.save()
         return super().perform_create(serializer)
 
     def perform_update(self, serializer):
+        """
+        Update a User object and save it to the database.
+
+        If the requesting user is an owner and the user being updated is not the
+        same as the requesting user, a PermissionDenied exception will be
+        raised.
+        Otherwise, a User object will be updated and saved to the database.
+        """
         if (
             self.request.user.role == "owner"
             and self.request.user != serializer.instance
@@ -207,6 +309,14 @@ class OwnerView(viewsets.ModelViewSet):
         return super().perform_update(serializer)
 
     def perform_destroy(self, instance):
+        """
+        Delete a User object from the database.
+
+        If the requesting user is an owner, a PermissionDenied exception will be
+        raised.
+
+        Otherwise, a User object will be deleted from the database.
+        """
         if self.request.user.role == "owner":
             raise PermissionDenied("Owners are not allowed to delete users.")
         super().perform_destroy(instance)
