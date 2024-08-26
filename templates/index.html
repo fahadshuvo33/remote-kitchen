@@ -1,0 +1,282 @@
+{% extends "_base.html" %} {% block content %} {% load static %}
+<nav
+  class="fixed top-0 z-50 w-full bg-white border-b border-gray-200 dark:bg-gray-800 dark:border-gray-700"
+>
+  <div class="px-3 py-3 lg:px-5 lg:pl-3">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center justify-start rtl:justify-end">
+        <button
+          data-drawer-target="logo-sidebar"
+          data-drawer-toggle="logo-sidebar"
+          aria-controls="logo-sidebar"
+          type="button"
+          class="inline-flex items-center p-2 text-sm text-gray-500 rounded-lg sm:hidden hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:ring-gray-600"
+        >
+          <span class="sr-only">Open sidebar</span>
+          <svg
+            class="w-6 h-6"
+            aria-hidden="true"
+            fill="currentColor"
+            viewBox="0 0 20 20"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              clip-rule="evenodd"
+              fill-rule="evenodd"
+              d="M2 4.75A.75.75 0 012.75 4h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 4.75zm0 10.5a.75.75 0 01.75-.75h7.5a.75.75 0 010 1.5h-7.5a.75.75 0 01-.75-.75zM2 10a.75.75 0 01.75-.75h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 10z"
+            ></path>
+          </svg>
+        </button>
+        <a href="#" class="flex ms-2 md:me-24">
+          <img
+            src="https://pbs.twimg.com/profile_images/1640557148924174336/kwEQqgwf_400x400.jpg"
+            class="h-8 me-3"
+            alt="Restaurant Logo"
+          />
+          <span
+            class="self-center text-xl font-semibold sm:text-2xl whitespace-nowrap dark:text-white"
+            >Restaurant Admin</span
+          >
+        </a>
+      </div>
+      <div class="flex items-center">
+        <div class="flex items-center ms-3">
+          <button
+            id="theme-toggle"
+            type="button"
+            class="text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 p-2 rounded-full relative group"
+            aria-label="Toggle theme"
+          >
+            <svg
+              id="theme-icon"
+              class="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <!-- Light Mode Icon -->
+              <path
+                id="theme-icon-path"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 3v3m0 12v3m9-9h-3m-12 0H3m15.364-7.364l-2.121 2.121m-9.192-2.12L6.636 7.636m10.193 10.193l-2.121-2.121m-9.192 2.12L6.636 16.364M12 7a5 5 0 015 5m-10 0a5 5 0 015-5m0 10a5 5 0 015-5"
+              />
+            </svg>
+            <span
+              class="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 w-max px-2 py-1 text-xs font-medium text-white bg-gray-800 rounded-lg opacity-0 group-hover:opacity-100"
+              id="theme-tooltip"
+              >Toggle theme</span
+            >
+          </button>
+          <button
+            id="profile-button"
+            type="button"
+            class="text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 p-2 rounded-full relative ms-4"
+            aria-label="Profile"
+          >
+            <svg
+              class="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M15 17h5l-1.403-3.348A9.019 9.019 0 0112 15a9.019 9.019 0 01-6.597-1.348L4 17h5m2 0h4m-7.078 0A2.078 2.078 0 117 17.078a2.078 2.078 0 01-1.078-1.078z"
+              />
+            </svg>
+            <span
+              class="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 w-max px-2 py-1 text-xs font-medium text-white bg-gray-800 rounded-lg opacity-0 group-hover:opacity-100"
+              >Profile</span
+            >
+          </button>
+          <button
+            id="signout-button"
+            type="button"
+            class="text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 p-2 rounded-full relative ms-4"
+            aria-label="Sign out"
+          >
+            <svg
+              class="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M17 16l4-4m0 0l-4-4m4 4H3m14-6l-4 4M3 12l4-4"
+              />
+            </svg>
+            <span
+              class="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 w-max px-2 py-1 text-xs font-medium text-white bg-gray-800 rounded-lg opacity-0 group-hover:opacity-100"
+              >Sign out</span
+            >
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<aside
+  id="logo-sidebar"
+  class="fixed top-0 left-0 z-40 w-64 h-screen pt-20 transition-transform -translate-x-full bg-white border-r border-gray-200 sm:translate-x-0 dark:bg-gray-800 dark:border-gray-700"
+  aria-label="Sidebar"
+>
+  <div class="h-full px-3 pb-4 overflow-y-auto bg-white dark:bg-gray-800">
+    <ul class="space-y-2 font-medium">
+      <li>
+        <a
+          href="#"
+          class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group"
+        >
+          <svg
+            class="w-5 h-5 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"
+            aria-hidden="true"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path d="M3 3v18h18V3H3zm16 16H5V8h14v11zm0-13H5V5h14v1z" />
+          </svg>
+          <span class="ms-3">Dashboard</span>
+        </a>
+      </li>
+      <li>
+        <a
+          href="#"
+          class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group"
+        >
+          <svg
+            class="w-5 h-5 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"
+            aria-hidden="true"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              d="M19 3h-2l-3 9h-8l-3-9H5l1 3h12l1-3zM10 22c1.103 0 2-.897 2-2H8c0 1.103.897 2 2 2zm6 0c1.103 0 2-.897 2-2h-4c0 1.103.897 2 2 2z"
+            />
+          </svg>
+          <span class="ms-3">Orders</span>
+        </a>
+      </li>
+      <li>
+        <a
+          href="#"
+          class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group"
+        >
+          <svg
+            class="w-5 h-5 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"
+            aria-hidden="true"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              d="M4 4h16v2H4V4zm0 4h16v2H4V8zm0 4h16v2H4v-2zm0 4h16v2H4v-2z"
+            />
+          </svg>
+          <span class="ms-3">Menus</span>
+        </a>
+      </li>
+      <li>
+        <a
+          href="#"
+          class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group"
+        >
+          <svg
+            class="w-5 h-5 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"
+            aria-hidden="true"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              d="M4 11h16v-1H4v1zm0 2h16v-1H4v1zm4-8h2v3H8V5zm4 0h2v3h-2V5zm4 0h2v3h-2V5zM8 21h2v-3H8v3zm4 0h2v-3h-2v3zm4 0h2v-3h-2v3zM4 17h16v1H4v-1zm0 2h16v1H4v-1z"
+            />
+          </svg>
+          <span class="ms-3">Restaurants</span>
+        </a>
+      </li>
+      <li>
+        <a
+          href="#"
+          class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group"
+        >
+          <svg
+            class="w-5 h-5 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"
+            aria-hidden="true"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              d="M12 2a5.002 5.002 0 0 0-4.904 6.092l-2.77 2.77a1.495 1.495 0 0 0-.222.336l-1.762 1.762a1 1 0 0 0 1.414 1.414l1.762-1.762a1.495 1.495 0 0 0 .336-.222l2.77-2.77A5.002 5.002 0 0 0 12 2zm0 2a3 3 0 1 1 0 6 3 3 0 0 1 0-6zm8.9 10.5l-1.6-1.6a1.495 1.495 0 0 0-.336-.222l-2.77-2.77A4.999 4.999 0 0 0 12 16a5.002 5.002 0 0 0 4.904-6.092l2.77 2.77c.072.072.146.138.222.336l1.762 1.762a1 1 0 0 0 1.414-1.414l-1.762-1.762a1.495 1.495 0 0 0-.336-.222l-2.77-2.77A5.002 5.002 0 0 0 12 16a5.002 5.002 0 0 0 4.904-6.092l2.77 2.77c.072.072.138.146.222.336l1.762 1.762a1 1 0 0 0 1.414-1.414l-1.762-1.762a1.495 1.495 0 0 0-.336-.222l-2.77-2.77A5.002 5.002 0 0 0 12 16a5.002 5.002 0 0 0 4.904-6.092l2.77 2.77c.072.072.146.138.222.336l1.762 1.762a1 1 0 0 0 1.414-1.414l-1.762-1.762a1.495 1.495 0 0 0-.336-.222l-2.77-2.77A5.002 5.002 0 0 0 12 16a5.002 5.002 0 0 0 4.904-6.092l2.77 2.77c.072.072.146.138.222.336l1.762 1.762a1 1 0 0 0 1.414-1.414l-1.762-1.762a1.495 1.495 0 0 0-.336-.222l-2.77-2.77A5.002 5.002 0 0 0 12 16a5.002 5.002 0 0 0 4.904-6.092z"
+            />
+          </svg>
+          <span class="ms-3">Staffs</span>
+        </a>
+      </li>
+      <li>
+        <a
+          href="#"
+          class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group"
+        >
+          <!-- Updated icon for Customers -->
+          <svg
+            class="w-5 h-5 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"
+            aria-hidden="true"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-3.31 0-6 2.69-6 6v1h12v-1c0-3.31-2.69-6-6-6z"
+            />
+          </svg>
+          <span class="ms-3">Customers</span>
+        </a>
+      </li>
+      <li>
+        <a
+          href="#"
+          class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group"
+        >
+          <!-- Updated icon for Settings -->
+          <svg
+            class="w-5 h-5 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"
+            aria-hidden="true"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              d="M12 15.5c-1.25 0-2.25-1-2.25-2.25s1-2.25 2.25-2.25 2.25 1 2.25 2.25-1 2.25-2.25 2.25zm0-7.5a5.25 5.25 0 1 0 0 10.5A5.25 5.25 0 0 0 12 8zm0-5c-3.72 0-6.75 3.03-6.75 6.75S8.28 16.5 12 16.5 18.75 13.47 18.75 9.75 15.72 3 12 3z"
+            />
+          </svg>
+          <span class="ms-3">Settings</span>
+        </a>
+      </li>
+    </ul>
+  </div>
+</aside>
+
+<div class="p-4 sm:ml-64">
+  <div
+    class="p-4 border-2 border-gray-200 border-dashed rounded-lg dark:border-gray-700 mt-14"
+  >
+    {% block main %}{% endblock main %}
+  </div>
+</div>
+<script src="{% static 'js/index.js' %}"></script>
+
+{% endblock content %}

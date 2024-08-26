@@ -23,7 +23,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = "django-insecure-zog5pdsk=^h^$29nl^#7-*$@w2nh2^p@tm8o+(+2i4e8)roqlm"
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ["*"]
 
@@ -43,6 +43,7 @@ THIRD_PARTY_APPS = [
     "rest_framework",
     "drf_spectacular",
     "phonenumber_field",
+    "compressor",
 ]
 
 INSTALLED_APPS = DEFAULTS_APPS + PROJECT_APPS + THIRD_PARTY_APPS
@@ -62,7 +63,7 @@ ROOT_URLCONF = "project.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [BASE_DIR / "templates"],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -153,3 +154,8 @@ SPECTACULAR_SETTINGS = {
 STRIPE_PUBLIC_KEY = "stripe-public-key"
 STRIPE_SECRET_KEY = "stripe-secret-key"
 STRIPE_WEBHOOK_SECRET = "stripe_webhook_secret"
+
+# Tailwind config
+COMPRESS_ROOT = BASE_DIR / "static"
+COMPRESS_ENABLED = True
+STATICFILES_FINDERS = ("compressor.finders.CompressorFinder",)

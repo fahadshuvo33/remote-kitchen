@@ -1,0 +1,80 @@
+{% extends "index.html" %} {% block main %}
+<div class="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
+  <!-- Summary Cards -->
+  <div class="card p-4 bg-white dark:bg-gray-800 rounded-lg">
+    <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+      Total Orders
+    </h3>
+    <p class="text-2xl font-bold text-gray-800 dark:text-gray-200">123</p>
+  </div>
+
+  <div class="card p-4 bg-white dark:bg-gray-800 rounded-lg">
+    <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+      Total Revenue
+    </h3>
+    <p class="text-2xl font-bold text-gray-800 dark:text-gray-200">$4567</p>
+  </div>
+
+  <div class="card p-4 bg-white dark:bg-gray-800 rounded-lg">
+    <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+      Active Reservations
+    </h3>
+    <p class="text-2xl font-bold text-gray-800 dark:text-gray-200">89</p>
+  </div>
+</div>
+
+<div class="mt-6">
+  <!-- Charts or graphs -->
+  <div class="card p-4 bg-white dark:bg-gray-800 rounded-lg">
+    <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+      Sales Chart
+    </h3>
+    <!-- Example chart (you can use libraries like Chart.js) -->
+    <div id="sales-chart" class="h-64 mt-4">
+      <!-- Chart placeholder -->
+    </div>
+  </div>
+</div>
+
+<div class="mt-6">
+  <!-- Table -->
+  <div class="card p-4 bg-white dark:bg-gray-800 rounded-lg">
+    <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+      Recent Orders
+    </h3>
+    <table class="min-w-full mt-4">
+      <thead>
+        <tr>
+          <th class="px-4 py-2 text-left text-gray-900 dark:text-white">
+            Order ID
+          </th>
+          <th class="px-4 py-2 text-left text-gray-900 dark:text-white">
+            Customer
+          </th>
+          <th class="px-4 py-2 text-left text-gray-900 dark:text-white">
+            Total
+          </th>
+          <th class="px-4 py-2 text-left text-gray-900 dark:text-white">
+            Status
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="px-4 py-2">001</td>
+          <td class="px-4 py-2">John Doe</td>
+          <td class="px-4 py-2">$45.00</td>
+          <td class="px-4 py-2 text-green-600">Completed</td>
+        </tr>
+        <tr>
+          <td class="px-4 py-2">002</td>
+          <td class="px-4 py-2">Jane Smith</td>
+          <td class="px-4 py-2">$78.00</td>
+          <td class="px-4 py-2 text-yellow-600">Pending</td>
+        </tr>
+        <!-- More rows as needed -->
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock main %}
